@@ -36,27 +36,24 @@
     </div>
 
     <script>
+        // ลิงก์ Web App ของคุณ
         const webAppUrl = "https://script.google.com/macros/s/AKfycbyNdvSWmeMKFCF418uX6_p7OuZOU3-GcDiLx4Gqsj0sUKM5WwxRP0PU7ihSRnoBjKS5TQ/exec";
 
         async function main() {
-            // กรุณาเปลี่ยน YOUR_LIFF_ID เป็น LIFF ID จริงของคุณ
+            // อย่าลืมเปลี่ยน YOUR_LIFF_ID เป็น ID จริงของคุณจาก LINE Developers
             await liff.init({ liffId: "2008864991-W1tRwtpy" }); 
-            if (!liff.isLoggedIn()) { 
-                liff.login(); 
-            }
+            if (!liff.isLoggedIn()) { liff.login(); }
         }
         main();
 
         document.getElementById('regForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const btn = document.getElementById('btnSubmit');
             btn.disabled = true;
-            btn.innerText = 'กำลังตรวจสอบข้อมูล...';
+            btn.innerText = 'กำลังตรวจสอบสิทธิ์...';
 
             try {
                 const profile = await liff.getProfile();
-                
                 const payload = {
                     userId: profile.userId,
                     fullName: document.getElementById('fullName').value,
@@ -72,29 +69,27 @@
 
                 if (result === "success") {
                     Swal.fire({
-                        title: 'Smart BackOffice',
-                        text: 'ลงทะเบียนสำเร็จ ยินดีต้อนรับเข้าสู่ระบบค่ะ',
+                        title: 'ลงทะเบียนสำเร็จ',
+                        text: 'ยินดีต้อนรับเข้าสู่ระบบ Smart BackOffice ค่ะ',
                         icon: 'success',
                         confirmButtonColor: '#1e3a8a'
-                    }).then(() => {
-                        liff.closeWindow();
-                    });
+                    }).then(() => { liff.closeWindow(); });
                 } else {
                     Swal.fire({
                         title: 'ไม่พบชื่อในระบบ',
-                        text: 'ขออภัย ชื่อ-นามสกุลนี้ไม่ได้รับอนุญาตให้เข้าใช้งาน กรุณาติดต่องานการเงินและพัสดุ',
+                        text: 'ขออภัย ชื่อ-นามสกุลนี้ไม่ได้รับอนุญาตให้ใช้งาน กรุณาติดต่อฝ่ายบุคคล',
                         icon: 'error',
                         confirmButtonColor: '#d33'
                     });
                     btn.disabled = false;
                     btn.innerText = 'ลงทะเบียนใช้งาน';
                 }
-
             } catch (err) {
-                Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อระบบได้ กรุณาลองใหม่ภายหลัง', 'error');
+                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อระบบได้ กรุณาลองใหม่', 'error');
                 btn.disabled = false;
                 btn.innerText = 'ลงทะเบียนใช้งาน';
             }
         });
     </script>
-
+</body>
+</html>
