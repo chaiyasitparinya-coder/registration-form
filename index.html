@@ -11,28 +11,32 @@
     <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
         <div class="text-center mb-8">
             <h2 class="text-2xl font-bold text-blue-900">Smart BackOffice</h2>
-            <p class="text-gray-500 text-sm">กรุณาลงทะเบียนเพื่อยืนยันตัวตน</p>
+            <p class="text-gray-500 text-sm">กรุณาลงทะเบียนเพื่อเข้าใช้งานระบบ</p>
         </div>
+        
         <form id="regForm" class="space-y-5">
             <div>
-                <label class="block text-gray-700 text-sm font-semibold mb-2">ชื่อ-สกุล</label>
-                <input type="text" id="empId" placeholder="เช่น ปริญญา มีฤทธิ์" required
+                <label class="block text-gray-700 text-sm font-semibold mb-2">ชื่อ-นามสกุล</label>
+                <input type="text" id="fullName" placeholder="ชื่อ นามสกุล" required
                     class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition">
             </div>
+            
             <div>
                 <label class="block text-gray-700 text-sm font-semibold mb-2">เบอร์โทรศัพท์</label>
                 <input type="tel" id="phone" placeholder="08xxxxxxxx" required
                     class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition">
             </div>
+
             <button type="submit" 
                 class="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-3 rounded-lg transition shadow-md">
-                ยืนยันตัวตน
+                ลงทะเบียนใช้งาน
             </button>
         </form>
     </div>
+
     <script>
         async function main() {
-            // สำคัญ: ต้องเอา LIFF ID ที่ได้จาก LINE Developers มาใส่ตรงนี้
+            // 1. นำ LIFF ID ของคุณมาใส่ที่นี่
             await liff.init({ liffId: "2008864991-W1tRwtpy" }); 
             if (!liff.isLoggedIn()) { liff.login(); }
         }
@@ -41,14 +45,29 @@
         document.getElementById('regForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const profile = await liff.getProfile();
-            const empId = document.getElementById('empId').value;
-            const phone = document.getElementById('phone').value;
             
-            // ส่งข้อมูลไปยังระบบ หรือแจ้งเตือน
-            alert('บันทึกข้อมูลรหัส: ' + empId + ' สำเร็จ!');
-            liff.closeWindow();
+            // 2. นำ URL จาก Google Apps Script มาใส่ที่นี่
+            const webAppUrl = "https://script.google.com/macros/s/AKfycbxsslD6FAy5JTeikx1e4jx18sJl1JrShHFkyJt0B-f2Y1Re4enodh5OKIQkYksTweVKvQ/exec";
+
+            const payload = {
+                userId: profile.userId,
+                fullName: document.getElementById('fullName').value,
+                phone: document.getElementById('phone').value
+            };
+
+            fetch(webAppUrl, {
+                method: 'POST',
+                mode: 'no-cors', 
+                cache: 'no-cache',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).then(() => {
+                alert('ลงทะเบียนสำเร็จ ข้อมูลของคุณถูกบันทึกเรียบร้อยแล้ว');
+                liff.closeWindow();
+            }).catch((err) => {
+                alert('เกิดข้อผิดพลาด: ' + err);
+            });
         });
     </script>
 </body>
-
 </html>
