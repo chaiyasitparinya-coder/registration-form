@@ -18,7 +18,7 @@
         <form id="regForm" class="space-y-5">
             <div>
                 <label class="block text-gray-700 text-sm font-semibold mb-2">ชื่อ-นามสกุล</label>
-                <input type="text" id="fullName" placeholder="กรุณาพิมพ์ชื่อและนามสกุล" required
+                <input type="text" id="fullName" placeholder="พิมพ์ชื่อ-นามสกุล ให้ตรงกับฐานข้อมูล" required
                     class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition text-base">
             </div>
             
@@ -36,11 +36,10 @@
     </div>
 
     <script>
-        // ใช้ Web App URL ล่าสุดของคุณ
-        const webAppUrl = "https://script.google.com/macros/s/AKfycbyDLi8DXPCM3YJEEamBmkT8AbdvIowKpeX6XHdNpmfLAYK1f4DvAs2ZHr56IeObtP3FAg/exec";
+        // *** สำคัญ: เปลี่ยน URL เป็น Web App URL ล่าสุดที่คุณ Deploy แบบ "Anyone" ***
+        const webAppUrl = "https://script.google.com/macros/s/AKfycbwR49tmA4eOn2E1HJQfYqnpFG0M657mslxBF-xqczRLENjuRk3AkscblCCbfNoOhPlixA/exec";
 
         async function main() {
-            // ใช้ LIFF ID ของคุณ
             await liff.init({ liffId: "2008864991-W1tRwtpy" }); 
             if (!liff.isLoggedIn()) { 
                 liff.login(); 
@@ -53,7 +52,7 @@
             
             const btn = document.getElementById('btnSubmit');
             btn.disabled = true;
-            btn.innerText = 'กำลังบันทึกข้อมูล...';
+            btn.innerText = 'กำลังตรวจสอบสิทธิ์...';
 
             try {
                 const profile = await liff.getProfile();
@@ -64,31 +63,43 @@
                     phone: document.getElementById('phone').value.trim()
                 };
 
-                // ส่งข้อมูลด้วยโหมด no-cors เพื่อแก้ปัญหาการเชื่อมต่อ
-                await fetch(webAppUrl, {
+                // ส่งข้อมูลแบบปกติ (ไม่มี no-cors) เพื่ออ่านผลลัพธ์ success / not_found
+                const response = await fetch(webAppUrl, {
                     method: 'POST',
-                    mode: 'no-cors',
-                    cache: 'no-cache',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
 
-                // แสดงข้อความสำเร็จ (เนื่องจาก no-cors เราจะอนุมานว่าส่งข้อมูลถึง Google แล้ว)
-                Swal.fire({
-                    title: 'ลงทะเบียนสำเร็จ',
-                    text: 'ระบบกำลังดำเนินการสลับริชเมนูให้ท่านภายใน 3-5 วินาที',
-                    icon: 'success',
-                    confirmButtonColor: '#1e3a8a'
-                }).then(() => {
-                    liff.closeWindow(); // ปิดหน้าต่าง LIFF
-                });
+                const result = await response.text();
+
+                if (result === "success") {
+                    Swal.fire({
+                        title: 'ลงทะเบียนสำเร็จ',
+                        text: 'ยินดีต้อนรับเข้าสู่ระบบค่ะ เมนูจะเปลี่ยนใน 3-5 วินาที',
+                        icon: 'success',
+                        confirmButtonColor: '#1e3a8a'
+                    }).then(() => {
+                        liff.closeWindow();
+                    });
+                } else if (result === "not_found") {
+                    Swal.fire({
+                        title: 'ไม่พบชื่อในระบบ',
+                        text: 'ชื่อ-นามสกุลนี้ไม่ได้รับอนุญาตให้เข้าใช้งาน กรุณาตรวจสอบการสะกดคำ หรือติดต่อฝ่ายบุคคล',
+                        icon: 'error',
+                        confirmButtonColor: '#d33'
+                    });
+                    btn.disabled = false;
+                    btn.innerText = 'ลงทะเบียนใช้งาน';
+                } else {
+                    throw new Error(result);
+                }
 
             } catch (err) {
                 console.error(err);
                 Swal.fire({
                     title: 'ข้อผิดพลาด',
-                    text: 'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้ กรุณาลองใหม่อีกครั้ง',
-                    icon: 'error'
+                    text: 'ไม่สามารถเชื่อมต่อระบบได้ (CORS Error) กรุณาตรวจสอบว่า Deploy สคริปต์เป็น "Anyone" หรือยัง',
+                    icon: 'warning',
+                    confirmButtonColor: '#f59e0b'
                 });
                 btn.disabled = false;
                 btn.innerText = 'ลงทะเบียนใช้งาน';
@@ -97,7 +108,3 @@
     </script>
 </body>
 </html>
-
-
-
-
