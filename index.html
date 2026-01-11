@@ -44,6 +44,19 @@
             if (!liff.isLoggedIn()) { 
                 liff.login(); 
             }
+            // ปรับใน index.html (GitHub)
+fetch(webAppUrl, {
+    method: 'POST',
+    mode: 'no-cors', // บังคับโหมดนี้เพื่อไม่ให้เบราว์เซอร์เด้งแจ้งเตือน Error
+    body: JSON.stringify(payload)
+});
+
+// แสดงแจ้งเตือนสำเร็จทันทีหลังจากส่ง (ไม่ต้องรอ response)
+Swal.fire({
+    title: 'บันทึกข้อมูลแล้ว',
+    text: 'ยินดีต้อนรับค่ะ เมนูจะเปลี่ยนในครู่เดียว',
+    icon: 'success'
+}).then(() => { liff.closeWindow(); });
         }
         main();
 
@@ -108,6 +121,7 @@
     </script>
 </body>
 </html>
+
 
 
 
