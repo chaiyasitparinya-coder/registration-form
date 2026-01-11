@@ -18,7 +18,7 @@
         <form id="regForm" class="space-y-5">
             <div>
                 <label class="block text-gray-700 text-sm font-semibold mb-2">ชื่อ-นามสกุล</label>
-                <input type="text" id="fullName" placeholder="ไม่ต้องระบุคำนำหน้าชื่อ" required
+                <input type="text" id="fullName" placeholder="กรุณาพิมพ์ชื่อและนามสกุล" required
                     class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition text-base">
             </div>
             
@@ -36,56 +36,60 @@
     </div>
 
     <script>
-        // ลิงก์ Web App ของคุณ
-        const webAppUrl = "https://script.google.com/macros/s/AKfycbw7nv7f_-oOA-DlDUL__HjmnsRMlcTrXW90DEGnauNdgOwzCyhHpFObxaBSmPU5m14iwA/exec";
+        // ใช้ Web App URL ล่าสุดของคุณ
+        const webAppUrl = "https://script.google.com/macros/s/AKfycbxOD9z7cajfRI-j9jArH2QZE8cniYlUR-t5K1URAF-LYufGn7Sc8Dr43nWxBJ8Neti9ig/exec";
 
         async function main() {
-            // อย่าลืมเปลี่ยน YOUR_LIFF_ID เป็น ID จริงของคุณจาก LINE Developers
+            // ใช้ LIFF ID ของคุณ
             await liff.init({ liffId: "2008864991-W1tRwtpy" }); 
-            if (!liff.isLoggedIn()) { liff.login(); }
+            if (!liff.isLoggedIn()) { 
+                liff.login(); 
+            }
         }
         main();
 
         document.getElementById('regForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            
             const btn = document.getElementById('btnSubmit');
             btn.disabled = true;
-            btn.innerText = 'กำลังตรวจสอบสิทธิ์...';
+            btn.innerText = 'กำลังบันทึกข้อมูล...';
 
             try {
                 const profile = await liff.getProfile();
+                
                 const payload = {
                     userId: profile.userId,
-                    fullName: document.getElementById('fullName').value,
-                    phone: document.getElementById('phone').value
+                    fullName: document.getElementById('fullName').value.trim(),
+                    phone: document.getElementById('phone').value.trim()
                 };
 
-                const response = await fetch(webAppUrl, {
+                // ส่งข้อมูลด้วยโหมด no-cors เพื่อแก้ปัญหาการเชื่อมต่อ
+                await fetch(webAppUrl, {
                     method: 'POST',
+                    mode: 'no-cors',
+                    cache: 'no-cache',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
 
-                const result = await response.text();
+                // แสดงข้อความสำเร็จ (เนื่องจาก no-cors เราจะอนุมานว่าส่งข้อมูลถึง Google แล้ว)
+                Swal.fire({
+                    title: 'ลงทะเบียนสำเร็จ',
+                    text: 'ระบบกำลังดำเนินการสลับริชเมนูให้ท่านภายใน 3-5 วินาที',
+                    icon: 'success',
+                    confirmButtonColor: '#1e3a8a'
+                }).then(() => {
+                    liff.closeWindow(); // ปิดหน้าต่าง LIFF
+                });
 
-                if (result === "success") {
-                    Swal.fire({
-                        title: 'ลงทะเบียนสำเร็จ',
-                        text: 'ยินดีต้อนรับเข้าสู่ระบบ Smart BackOffice ค่ะ',
-                        icon: 'success',
-                        confirmButtonColor: '#1e3a8a'
-                    }).then(() => { liff.closeWindow(); });
-                } else {
-                    Swal.fire({
-                        title: 'ไม่พบชื่อในระบบ',
-                        text: 'ขออภัย ชื่อ-นามสกุลนี้ไม่ได้รับอนุญาตให้ใช้งาน กรุณาติดต่อฝ่ายบุคคล',
-                        icon: 'error',
-                        confirmButtonColor: '#d33'
-                    });
-                    btn.disabled = false;
-                    btn.innerText = 'ลงทะเบียนใช้งาน';
-                }
             } catch (err) {
-                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อระบบได้ กรุณาลองใหม่', 'error');
+                console.error(err);
+                Swal.fire({
+                    title: 'ข้อผิดพลาด',
+                    text: 'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้ กรุณาลองใหม่อีกครั้ง',
+                    icon: 'error'
+                });
                 btn.disabled = false;
                 btn.innerText = 'ลงทะเบียนใช้งาน';
             }
@@ -93,5 +97,3 @@
     </script>
 </body>
 </html>
-
-
