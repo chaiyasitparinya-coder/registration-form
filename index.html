@@ -6,6 +6,7 @@
     <title>Smart BackOffice Registration</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="bg-blue-50 flex items-center justify-center min-h-screen p-4">
     <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
@@ -18,16 +19,16 @@
             <div>
                 <label class="block text-gray-700 text-sm font-semibold mb-2">ชื่อ-นามสกุล</label>
                 <input type="text" id="fullName" placeholder="ชื่อ นามสกุล" required
-                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition">
+                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition text-base">
             </div>
             
             <div>
                 <label class="block text-gray-700 text-sm font-semibold mb-2">เบอร์โทรศัพท์</label>
                 <input type="tel" id="phone" placeholder="08xxxxxxxx" required
-                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition">
+                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition text-base">
             </div>
 
-            <button type="submit" 
+            <button type="submit" id="btnSubmit"
                 class="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-3 rounded-lg transition shadow-md">
                 ลงทะเบียนใช้งาน
             </button>
@@ -38,38 +39,63 @@
         async function main() {
             // 1. นำ LIFF ID ของคุณมาใส่ที่นี่
             await liff.init({ liffId: "2008864991-W1tRwtpy" }); 
-            if (!liff.isLoggedIn()) { liff.login(); }
+            if (!liff.isLoggedIn()) { 
+                liff.login(); 
+            }
         }
         main();
 
         document.getElementById('regForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const profile = await liff.getProfile();
             
-            // 2. นำ URL จาก Google Apps Script มาใส่ที่นี่
-            const webAppUrl = "https://script.google.com/macros/s/AKfycbwbU3FQ3S5dlES4ZFo8pmP_TV3JPaW2px2s2_6CHJmHekgahbmsrxZwXMJIHy4RaB2OSw/exec";
+            // ปิดปุ่มระหว่างส่งข้อมูลเพื่อป้องกันการกดซ้ำ
+            const btn = document.getElementById('btnSubmit');
+            btn.disabled = true;
+            btn.innerText = 'กำลังบันทึกข้อมูล...';
 
-            const payload = {
-                userId: profile.userId,
-                fullName: document.getElementById('fullName').value,
-                phone: document.getElementById('phone').value
-            };
+            try {
+                const profile = await liff.getProfile();
+                
+                // 2. นำ URL จาก Google Apps Script (ที่ Deploy แล้ว) มาใส่ที่นี่
+                const webAppUrl = "https://script.google.com/macros/s/AKfycbzZZYCaBpWmlGkMW6FFEFScYpy4pe92EjBrQTts9LKjEKXKmrmRXnM94aRCCEDb0D9hbQ/exec";
 
-            fetch(webAppUrl, {
-                method: 'POST',
-                mode: 'no-cors', 
-                cache: 'no-cache',
-                headers: { 'Content-Type': 'Smart BackOffice' },
-                body: JSON.stringify(payload)
-            }).then(() => {
-                alert('ลงทะเบียนสำเร็จ ข้อมูลของคุณถูกบันทึกเรียบร้อยแล้ว');
-                liff.closeWindow();
-            }).catch((err) => {
-                alert('เกิดข้อผิดพลาด: ' + err);
-            });
+                const payload = {
+                    userId: profile.userId,
+                    fullName: document.getElementById('fullName').value,
+                    phone: document.getElementById('phone').value
+                };
+
+                // ส่งข้อมูลไปยัง Google Sheets
+                await fetch(webAppUrl, {
+                    method: 'POST',
+                    mode: 'no-cors', 
+                    cache: 'no-cache',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                // แสดงการแจ้งเตือนด้วย SweetAlert2
+                Swal.fire({
+                    title: 'Smart BackOffice',
+                    text: 'ลงทะเบียนสำเร็จ ข้อมูลของคุณถูกบันทึกเรียบร้อยแล้ว',
+                    icon: 'success',
+                    confirmButtonText: 'ตกลง',
+                    confirmButtonColor: '#1e3a8a'
+                }).then(() => {
+                    liff.closeWindow(); // ปิดหน้าต่าง LIFF
+                });
+
+            } catch (err) {
+                Swal.fire({
+                    title: 'เกิดข้อผิดพลาด',
+                    text: err.message,
+                    icon: 'error',
+                    confirmButtonText: 'ลองอีกครั้ง'
+                });
+                btn.disabled = false;
+                btn.innerText = 'ลงทะเบียนใช้งาน';
+            }
         });
     </script>
 </body>
 </html>
-
-
